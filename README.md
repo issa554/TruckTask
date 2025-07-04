@@ -42,7 +42,8 @@ npm install
 
 ## Visual Design
 i used 3D  representation to show each SKU as a colored box.
-![Truck Utilization Calculator Demo](img/3Dimage.png)
+![Truck Utilization Calculator Demo](img/3Dimage1.png)
+![Truck Utilization Calculator Demo](img/3Dimage2.png)
 
 ## 🧠 AI-Driven Development Workflow
 AI was used throughout the project in:

@@ -74,6 +74,7 @@ const simulateTruckPacking = async (skuQuantities, truckType) => {
   const skusToPack = JSON.parse(JSON.stringify(skuQuantities));
   const skuDetailsMap = new Map();
 
+  // Pre-fetch all SKU details
   for (const item of skusToPack) {
     const skuDetails = await SKU.findById(item.skuId);
     skuDetailsMap.set(item.skuId, skuDetails);
@@ -85,94 +86,111 @@ const simulateTruckPacking = async (skuQuantities, truckType) => {
     skuGroups: new Map(),
     currentVolume: 0,
     currentWeight: 0,
-    availableSpaces: [createSpace(0, 0, 0, truckLength, truckHeight, truckWidth)]
+    currentPosition: { x: 0, y: 0, z: 0 } // Track current placement position
   };
   truckLoads.push(currentTruck);
 
+  // Process each SKU type
   for (const item of skusToPack) {
     const sku = skuDetailsMap.get(item.skuId);
     const { length, width, height, weight } = sku;
     const boxVolume = length * width * height;
 
-    if (boxVolume > truckVolumeCapacity || weight > truckWeightCapacity) {
+    // Check if single box fits in truck at all
+    if (boxVolume > truckVolumeCapacity || weight > truckWeightCapacity ||
+        length > truckLength || width > truckWidth || height > truckHeight) {
       throw new Error(`SKU ${sku.name} is too large for the truck.`);
     }
 
     let quantity = item.quantity;
 
     while (quantity > 0) {
-      let placed = false;
+      // Check if current box fits at current position with weight constraint
+      const { x, y, z } = currentTruck.currentPosition;
+      
+      if (x + length <= truckLength && 
+          y + height <= truckHeight && 
+          z + width <= truckWidth &&
+          currentTruck.currentVolume + boxVolume <= truckVolumeCapacity &&
+          currentTruck.currentWeight + weight <= truckWeightCapacity) {
+        
+        // Place the box
+        const position = { x, y, z };
+        currentTruck.placedBoxes.push({ sku, ...position, length, width, height });
 
-      for (let i = 0; i < currentTruck.availableSpaces.length; i++) {
-        const space = currentTruck.availableSpaces[i];
-
-        if (canFit(space, length, height, width) &&
-            currentTruck.currentVolume + boxVolume <= truckVolumeCapacity &&
-            currentTruck.currentWeight + weight <= truckWeightCapacity) {
-
-          const position = { x: space.x, y: space.y, z: space.z };
-
-          currentTruck.placedBoxes.push({ sku, ...position, length, width, height });
-
-          const skuId = sku._id.toString();
-          if (!currentTruck.skuGroups.has(skuId)) {
-            currentTruck.skuGroups.set(skuId, {
-              sku,
-              count: 0,
-              positions: [],
-              dimensions: { length, width, height },
-              weight
-            });
-          }
-
-          const group = currentTruck.skuGroups.get(skuId);
-          group.count++;
-          group.positions.push(position);
-
-          currentTruck.currentVolume += boxVolume;
-          currentTruck.currentWeight += weight;
-
-          const existing = currentTruck.skus.find(s => s.sku._id.equals(sku._id));
-          if (existing) existing.quantity++;
-          else currentTruck.skus.push({ sku, quantity: 1 });
-
-          const newSpaces = splitSpace(space, length, height, width);
-          currentTruck.availableSpaces.splice(i, 1, ...newSpaces);
-          currentTruck.availableSpaces.sort((a, b) => a.y - b.y || a.z - b.z || a.x - b.x);
-
-          quantity--;
-          placed = true;
-          break;
+        // Update SKU groups
+        const skuId = sku._id.toString();
+        if (!currentTruck.skuGroups.has(skuId)) {
+          currentTruck.skuGroups.set(skuId, {
+            sku,
+            count: 0,
+            positions: [],
+            dimensions: { length, width, height },
+            weight
+          });
         }
-      }
 
-      if (!placed) {
+        const group = currentTruck.skuGroups.get(skuId);
+        group.count++;
+        group.positions.push(position);
+
+        // Update truck state
+        currentTruck.currentVolume += boxVolume;
+        currentTruck.currentWeight += weight;
+
+        const existing = currentTruck.skus.find(s => s.sku._id.equals(sku._id));
+        if (existing) existing.quantity++;
+        else currentTruck.skus.push({ sku, quantity: 1 });
+
+        // Move to next position following Y → Z → X strategy
+        let newY = y + height;
+        let newZ = z;
+        let newX = x;
+
+        // If no more space in Y, reset Y and move in Z
+        if (newY + height > truckHeight) {
+          newY = 0;
+          newZ = z + width;
+          
+          // If no more space in Z, reset Z and move in X
+          if (newZ + width > truckWidth) {
+            newY = 0;
+            newZ = 0;
+            newX = x + length;
+          }
+        }
+
+        currentTruck.currentPosition = { x: newX, y: newY, z: newZ };
+        quantity--;
+      } else {
+        // Current truck is full, start a new truck
         currentTruck = {
           skus: [],
           placedBoxes: [],
           skuGroups: new Map(),
           currentVolume: 0,
           currentWeight: 0,
-          availableSpaces: [createSpace(0, 0, 0, truckLength, truckHeight, truckWidth)]
+          currentPosition: { x: 0, y: 0, z: 0 } // Reset position for new truck
         };
         truckLoads.push(currentTruck);
       }
     }
   }
 
+  // Convert truck loads to the expected format
   return truckLoads.map(truck => {
     const groupedBoxes = [];
     truck.skuGroups.forEach((group, skuId) => {
-      const sorted = group.positions.sort((a, b) => a.y - b.y || a.z - b.z || a.x - b.x);
+      const sorted = group.positions.sort((a, b) => a.x - b.x || a.z - b.z || a.y - b.y);
       const start = sorted[0];
+      const end = sorted[sorted.length - 1];
 
+      // Calculate grid capacity (how many boxes could theoretically fit)
       const gridCapacity = {
         x: Math.floor(truckLength / group.dimensions.length),
         y: Math.floor(truckHeight / group.dimensions.height),
         z: Math.floor(truckWidth / group.dimensions.width)
       };
-
-      const end = calculateEnd(start, group.count, gridCapacity, group.dimensions);
 
       groupedBoxes.push({
         sku: group.sku.name,
@@ -181,7 +199,11 @@ const simulateTruckPacking = async (skuQuantities, truckType) => {
         weight: group.weight,
         positionPattern: {
           start,
-          end,
+          end: {
+            x: end.x + group.dimensions.length,
+            y: end.y + group.dimensions.height,
+            z: end.z + group.dimensions.width
+          },
           count: group.count
         },
         gridCapacity
@@ -481,9 +503,5 @@ module.exports = {
   getOptimizationRecommendations,
   getRemainingCapacity,
   simulateTruckPacking,
-  splitSpace,
-  canFit,
-  createSpace,
-  populateCalculationForResponse,
-  calculateEnd
+  populateCalculationForResponse
 }; 

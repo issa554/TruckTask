@@ -429,16 +429,7 @@ function SingleTruckView({ truckData, truckIndex, truckType }) {
                 <div className="p-4 border-b border-gray-200">
                   <h3 className="text-sm font-semibold text-gray-900">Cargo Controls</h3>
                   <div className="mt-2 space-y-1">
-                    <button
-                      onClick={() => setShowAllBoxes(!showAllBoxes)}
-                      className={`w-full px-3 py-1 text-xs rounded transition-colors ${
-                        showAllBoxes
-                          ? "bg-green-600 text-white hover:bg-green-700"
-                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }`}
-                    >
-                      {showAllBoxes ? "All Boxes Shown" : "Limited View"}
-                    </button>
+                    
                     <div className="text-xs text-gray-500 text-center">
                       {getTotalBoxCount()} total boxes
                     </div>
