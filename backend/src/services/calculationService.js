@@ -474,6 +474,16 @@ const populateCalculationForResponse = async (calculation, skuQuantities, truckT
   };
 };
 
+const getPlannedShipments = async (destination) => {
+  const existingPlannedCalculation = await Calculation.find({ destination, status: 'Planned' });
+
+    if (existingPlannedCalculation.length > 0) {
+      return {message: 'A planned shipment already exists for this destination.', existingCalculations: existingPlannedCalculation};
+    } else {
+      return {message: 'No planned shipment found for this destination. Proceed with new calculation.'};
+    }
+};
+
 module.exports = {
   createCalculationService,
   updateCalculationService,
@@ -485,5 +495,6 @@ module.exports = {
   canFit,
   createSpace,
   populateCalculationForResponse,
-  calculateEnd
+  calculateEnd,
+  getPlannedShipments
 }; 

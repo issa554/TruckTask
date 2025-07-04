@@ -1,5 +1,5 @@
 const Calculation = require('../models/Calculation');
-const { createCalculationService, updateCalculationService  ,getTruckingCalculationDetails} = require('../services/calculationService');
+const { createCalculationService, updateCalculationService  ,getTruckingCalculationDetails,getPlannedShipments} = require('../services/calculationService');
 
 const calculateTrucks = async (req, res) => {
   try {
@@ -53,18 +53,12 @@ const searchPlannedShipments = async (req, res) => {
       return res.status(400).json({ message: 'Destination is required.' });
     }
 
-    const existingPlannedCalculation = await Calculation.find({ destination, status: 'Planned' });
+    const existingPlannedShipments = await getPlannedShipments(destination);
 
-    if (existingPlannedCalculation.length > 0) {
-      return res.status(200).json({
-        message: 'A planned shipment already exists for this destination.',
-        existingCalculations: existingPlannedCalculation
-      });
-    } else {
-      return res.status(200).json({
-        message: 'No planned shipment found for this destination. Proceed with new calculation.'
-      });
+    if (existingPlannedShipments) {
+      return res.status(200).json(existingPlannedShipments);
     }
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

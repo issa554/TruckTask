@@ -20,10 +20,10 @@ const seedDB = async () => {
     const skus = [
       {
         name: 'Laptop',
-        length: 0.3,
-        width: 0.2,
-        height: 0.05,
-        weight: 2
+        length: 0.5,
+        width: 0.5,
+        height: 0.5,
+        weight: 20
       },
       {
         name: 'Monitor',
@@ -33,25 +33,11 @@ const seedDB = async () => {
         weight: 5
       },
       {
-        name: 'Keyboard',
-        length: 0.4,
-        width: 0.15,
-        height: 0.03,
-        weight: 0.8
-      },
-      {
-        name: 'Mouse',
-        length: 0.1,
-        width: 0.07,
-        height: 0.04,
-        weight: 0.1
-      },
-      {
-        name: 'Printer',
-        length: 0.45,
-        width: 0.4,
-        height: 0.3,
-        weight: 8
+        name: 'Table',
+        length:1,
+        width: 0.5,
+        height: 0.5,
+        weight: 10
       }
     ];
 
@@ -64,18 +50,11 @@ const seedDB = async () => {
         weightCapacity: 1000
       },
       {
-        name: 'Medium Truck',
+        name: 'Truck',
         length: 6,
         width: 2.2,
         height: 2.5,
         weightCapacity: 5000
-      },
-      {
-        name: 'Large Truck',
-        length: 12,
-        width: 2.5,
-        height: 2.7,
-        weightCapacity: 20000
       }
     ];
 
