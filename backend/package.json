@@ -1,0 +1,36 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "nodemon src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest tests",
+    "test:watch": "jest tests --watch",
+    "test:coverage": "jest tests --coverage",
+    "test:integration": "jest tests/integration",
+    "test:unit": "jest tests/services tests/utils", 
+    "test:verbose": "jest tests --verbose",
+    "seed": "node src/utils/seed.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "binpackingjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.0.1",
+    "express": "^5.1.0",
+    "mongoose": "^8.16.1"
+  },
+  "devDependencies": {
+    "chai": "^5.2.0",
+    "cross-env": "^7.0.3",
+    "jest": "^30.0.3",
+    "mongodb-memory-server": "^10.1.4",
+    "nodemon": "^3.1.10",
+    "sinon": "^21.0.0",
+    "supertest": "^7.1.1"
+  }
+}
