@@ -1,4 +1,3 @@
-
 import { Canvas } from "@react-three/fiber"
 import { OrbitControls, Box, Text, Environment, Grid } from "@react-three/drei"
 import { useState } from "react"
@@ -71,12 +70,22 @@ function CargoBoxes({ packedSKUs, groupedBoxes, skus, showSku, showAllBoxes = tr
     const boxHeight = orientGroup.dimensions.height
     const boxDepth = orientGroup.dimensions.depth
     
-    // Calculate how many boxes fit in each dimension
-    const xBoxes = Math.max(1, Math.floor((end.x - start.x + boxWidth) / boxWidth))
-    const yBoxes = Math.max(1, Math.floor((end.y - start.y + boxHeight) / boxHeight))
-    const zBoxes = Math.max(1, Math.floor((end.z - start.z + boxDepth) / boxDepth))
+    // Use gridCapacity if available, otherwise calculate from placement area
+    let xBoxes, yBoxes, zBoxes
     
-    // Generate positions using proper box spacing
+    if (orientGroup.gridCapacity) {
+      // Use the gridCapacity constraints provided by the backend
+      xBoxes = orientGroup.gridCapacity.x
+      yBoxes = orientGroup.gridCapacity.y
+      zBoxes = orientGroup.gridCapacity.z
+    } else {
+      // Fallback: calculate from placement area dimensions
+      xBoxes = Math.max(1, Math.floor((end.x - start.x + boxWidth) / boxWidth))
+      yBoxes = Math.max(1, Math.floor((end.y - start.y + boxHeight) / boxHeight))
+      zBoxes = Math.max(1, Math.floor((end.z - start.z + boxDepth) / boxDepth))
+    }
+    
+    // Generate positions using proper box spacing and grid constraints
     let boxCount = 0
     for (let z = 0; z < zBoxes && boxCount < count; z++) {
       for (let y = 0; y < yBoxes && boxCount < count; y++) {
@@ -173,11 +182,18 @@ function CargoBoxes({ packedSKUs, groupedBoxes, skus, showSku, showAllBoxes = tr
             const { start } = box.positionPattern
             const count = Math.min(box.count || 1, 20)
             
+            // Use gridCapacity if available, otherwise fallback to hardcoded values
+            const gridCapacity = box.gridCapacity || { x: 5, y: 5, z: 5 }
+            
             for (let i = 0; i < count; i++) {
+              const x = i % gridCapacity.x
+              const z = Math.floor((i % (gridCapacity.x * gridCapacity.z)) / gridCapacity.x)
+              const y = Math.floor(i / (gridCapacity.x * gridCapacity.z))
+              
               positions.push({
-                x: start.x + (i % 5) * box.dimensions.length,
-                y: start.y + Math.floor(i / 25) * box.dimensions.height,
-                z: start.z + Math.floor((i % 25) / 5) * box.dimensions.width
+                x: start.x + x * box.dimensions.length,
+                y: start.y + y * box.dimensions.height,
+                z: start.z + z * box.dimensions.width
               })
             }
           }

@@ -2,7 +2,7 @@ import React from 'react';
 import { X, Truck, Package, Weight, MapPin, Calendar, User } from 'lucide-react';
 
 const CalculationDetails = ({ calculation, onClose }) => {
-  if (!calculation) return null;
+  if (!calculation) return null;  
 
   const utilization = calculation.utilization || 0;
   const utilizationClass = utilization >= 70 ? 'text-green-600' : 'text-red-600';
@@ -19,7 +19,7 @@ const CalculationDetails = ({ calculation, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl max-h-[90vh] overflow-y-auto w-full">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">

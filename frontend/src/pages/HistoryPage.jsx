@@ -38,7 +38,6 @@ function HistoryPage() {
         </div>
       </div>
 
-      {/* History Content */}
       <CalculationHistory 
         onEditCalculation={handleEditCalculation}
       />

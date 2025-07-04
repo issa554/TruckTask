@@ -485,5 +485,5 @@ module.exports = {
   canFit,
   createSpace,
   populateCalculationForResponse,
-
+  calculateEnd
 }; 

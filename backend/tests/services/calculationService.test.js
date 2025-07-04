@@ -205,8 +205,8 @@ describe('CalculationService', () => {
 
       expect(result.recommendations).toBeDefined();
       if (result.recommendations.length > 0) {
-        expect(result.recommendations[0]).toBeInstanceOf(Array);
-        result.recommendations[0].forEach(rec => {
+        expect(result.recommendations[0]).toBeInstanceOf(Object);
+        result.recommendations.forEach(rec => {
           expect(rec).toHaveProperty('sku');
           expect(rec).toHaveProperty('maxQuantity');
           expect(rec.maxQuantity).toBeGreaterThan(0);
@@ -228,7 +228,7 @@ describe('CalculationService', () => {
       // The recommendation system should skip SKUs with zero volume or weight
       // and only recommend valid SKUs
       if (result.recommendations.length > 0) {
-        result.recommendations[0].forEach(rec => {
+        result.recommendations.forEach(rec => {
           expect(rec.sku.length * rec.sku.width * rec.sku.height).toBeGreaterThan(0);
           expect(rec.sku.weight).toBeGreaterThan(0);
           expect(rec.maxQuantity).toBeGreaterThan(0);
